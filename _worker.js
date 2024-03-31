@@ -921,8 +921,7 @@ async function getVLESSConfig(userID, hostName, sub, userAgent, RproxyIP) {
 		} else if (userAgent.includes('sing-box') || userAgent.includes('singbox')) {
 			url = `https://${subconverter}/sub?target=singbox&url=https%3A%2F%2F${sub}%2Fsub%3Fhost%3D${fakeHostName}%26uuid%3D${fakeUserID}%26edgetunnel%3Dcmliu%26proxyip%3D${RproxyIP}&insert=false&config=${encodeURIComponent(subconfig)}&exclude=%E9%A2%91%E9%81%93&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
 		} else {
-			url = `https://${sub}/sub?host=${fakeHostName}&uuid=${fakeUserID}&edgetunnel=cmliu&proxyip=${RproxyIP}&exclude=%E9%A2%91%E9%81%93&emoji=true`;
-			isBase64 = true;
+			url = `https://${subconverter}/sub?target=clash&url=https%3A%2F%2F${sub}%2Fsub%3Fhost%3D${fakeHostName}%26uuid%3D${fakeUserID}%26edgetunnel%3Dcmliu%26proxyip%3D${RproxyIP}&insert=false&config=${encodeURIComponent(subconfig)}&exclude=%E9%A2%91%E9%81%93&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&clash.doh=true&new_name=true`;
 		}
 
 		try {
