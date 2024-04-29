@@ -99,8 +99,9 @@ export default {
 					return new Response('Not found', { status: 404 });
 				}
 			} else {
-				if (new RegExp('/proxyip=', 'i').test(url.pathname)) proxyIP = url.pathname.split("=")[1];
-				else if (new RegExp('/proxyip.', 'i').test(url.pathname)) proxyIP = url.pathname.split("/proxyip.")[1];
+				proxyIP = url.searchParams.get('proxyip') || proxyIP;
+				if (new RegExp('/proxyip=', 'i').test(url.pathname)) proxyIP = url.pathname.toLowerCase().split('/proxyip=')[1];
+				else if (new RegExp('/proxyip.', 'i').test(url.pathname)) proxyIP = `proxyip.${url.pathname.toLowerCase().split("/proxyip.")[1]}`;
 				else if (!proxyIP || proxyIP == '') proxyIP = 'proxyip.fxxk.dedyn.io';
 				return await vlessOverWSHandler(request);
 			}
@@ -852,6 +853,49 @@ async function ADD(envadd) {
 	return add ;
 }
 
+function 配置信息(UUID, 域名地址) {
+	const 啥啥啥_写的这是啥啊 = 'dmxlc3M=';
+	const 协议类型 = atob(啥啥啥_写的这是啥啊);
+	
+	const 别名 = 域名地址;
+	let 地址 = 域名地址;
+	let 端口 = 443;
+
+	const 用户ID = UUID;
+	const 加密方式 = 'none';
+	
+	const 传输层协议 = 'ws';
+	const 伪装域名 = 域名地址;
+	const 路径 = '/?ed=2560';
+	
+	let 传输层安全 = ['tls',true];
+	const SNI = 域名地址;
+	const 指纹 = 'randomized';
+
+	if (域名地址.includes('.workers.dev')){
+		地址 = 'www.wto.org';
+		端口 = 80 ;
+		传输层安全 = ['',false];
+	}
+
+	const v2ray = `${协议类型}://${用户ID}@${地址}:${端口}?encryption=${加密方式}&security=${传输层安全[0]}&sni=${SNI}&fp=${指纹}&type=${传输层协议}&host=${伪装域名}&path=${encodeURIComponent(路径)}#${encodeURIComponent(别名)}`;
+	const clash = `- type: ${协议类型}
+	name: ${别名}
+	server: ${地址}
+	port: ${端口}
+	uuid: ${用户ID}
+	network: ${传输层协议}
+	tls: ${传输层安全[1]}
+	udp: false
+	sni: ${SNI}
+	client-fingerprint: ${指纹}
+	ws-opts:
+	  path: "${路径}"
+	  headers:
+	  host: ${伪装域名}`;
+	return [v2ray,clash];
+}
+
 /**
  * @param {string} userID
  * @param {string | null} hostName
@@ -864,6 +908,9 @@ let ll = 'l';
 let ee = 'e';
 let ss = 's';
 async function getVLESSConfig(userID, hostName, sub, userAgent, RproxyIP) {
+	const Config = 配置信息(userID , hostName);
+	const v2ray = Config[0];
+	const clash = Config[1];
 	// 如果sub为空，则显示原始内容
 	if (!sub || sub === '') {
 		const cmliuMain = `${vv}${ll}${ee}${ss}${ss}://${userID}@${hostName}:443?encryption=none&security=tls&sni=${hostName}&fp=randomized&type=ws&host=${hostName}&path=%2F%3Fed%3D2560#${hostName}`;
@@ -872,7 +919,7 @@ async function getVLESSConfig(userID, hostName, sub, userAgent, RproxyIP) {
 	################################################################
 	v2ray
 	---------------------------------------------------------------
-	${cmliuMain}
+	${vlessMain}
 	---------------------------------------------------------------
 	################################################################
 	clash-meta
@@ -920,28 +967,31 @@ async function getVLESSConfig(userID, hostName, sub, userAgent, RproxyIP) {
 		} else {
 			fakeHostName = `${fakeHostName}.${generateRandomNumber()}.xyz`
 		}
-		let content = "";
-		let url = "";
+
+		let url = `https://${sub}/sub?host=${fakeHostName}&uuid=${fakeUserID}&edgetunnel=cmliu&proxyip=${RproxyIP}`;
 		let isBase64 = false;
 		if ((userAgent.includes('clash') || userAgent.includes('shadowrocket'))&& !userAgent.includes('nekobox')) {
 			//https://apiurl.v1.mk/sub?target=clash&url=https%3A%2F%2Ftglaoshiji.github.io%2Fnodeshare%2F2024%2F4%2F20240402.yaml&insert=false&config=https%3A%2F%2Fraw.githubusercontent.com%2FACL4SSR%2FACL4SSR%2Fmaster%2FClash%2Fconfig%2FACL4SSR_Online_Full_NoAuto.ini&exclude=%E9%A2%91%E9%81%93%7C%E5%8F%8D%E4%BB%A3%7C%E4%BC%98%E9%80%89%7C%E5%9F%9F%E5%90%8D&rename=(%3F%3C%3D%5BA-Z%5D%7B2%7D)%20%40-Chieh%20%60%60CT%40Chieh-CT%60%60CMCC%40Chieh-CMCC&emoji=true&list=false&xudp=false&udp=false&tfo=false&expand=true&scv=false&fdn=false&new_name=true
 			// https://apiurl.v1.mk/sub?target=clash&url=https%3A%2F%2Ftglaoshiji.github.io%2Fnodeshare%2F2024%2F4%2F20240402.yaml&insert=false&config=https%3A%2F%2Fraw.githubusercontent.com%2FACL4SSR%2FACL4SSR%2Fmaster%2FClash%2Fconfig%2FACL4SSR_Online_Full_NoAuto.ini&exclude=%E9%A2%91%E9%81%93%7C%E5%8F%8D%E4%BB%A3%7C%E4%BC%98%E9%80%89%7C%E5%9F%9F%E5%90%8D&rename=(%3F%3C%3D%5BA-Z%5D%7B2%7D)%20%40-Chieh%20%60%60CT%40Chieh-CT%60%60CMCC%40Chieh-CMCC&emoji=true&list=false&xudp=false&udp=false&tfo=false&expand=true&scv=false&fdn=false&new_name=true
-			url = `https://${subconverter}/sub?target=clash&url=https%3A%2F%2F${sub}%2Fsub%3Fhost%3D${fakeHostName}%26uuid%3D${fakeUserID}%26edgetunnel%3Dcmliu%26proxyip%3D${RproxyIP}&insert=false&config=${encodeURIComponent(subconfig)}&exclude=%E9%A2%91%E9%81%93%7C%E5%8F%8D%E4%BB%A3%7C%E4%BC%98%E9%80%89%7C%E5%9F%9F%E5%90%8D&rename=(%3F%3C%3D%5BA-Z%5D%7B2%7D)%20%40-Chieh%20%60%60CT%40Chieh-CT%60%60CMCC%40Chieh-CMCC&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&clash.doh=true&new_name=true`;
+			url = `https://${subconverter}/sub?target=clash&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subconfig)}&exclude=%E9%A2%91%E9%81%93%7C%E5%8F%8D%E4%BB%A3%7C%E4%BC%98%E9%80%89%7C%E5%9F%9F%E5%90%8D&rename=(%3F%3C%3D%5BA-Z%5D%7B2%7D)%20%40-Chieh%20%60%60CT%40Chieh-CT%60%60CMCC%40Chieh-CMCC&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&clash.doh=true&new_name=true`;
 		} else if (userAgent.includes('sing-box') || userAgent.includes('singbox')) {
-			url = `https://${subconverter}/sub?target=singbox&url=https%3A%2F%2F${sub}%2Fsub%3Fhost%3D${fakeHostName}%26uuid%3D${fakeUserID}%26edgetunnel%3Dcmliu%26proxyip%3D${RproxyIP}&insert=false&config=${encodeURIComponent(subconfig)}&exclude=%E9%A2%91%E9%81%93%7C%E5%8F%8D%E4%BB%A3%7C%E4%BC%98%E9%80%89%7C%E5%9F%9F%E5%90%8D&rename=(%3F%3C%3D%5BA-Z%5D%7B2%7D)%20%40-Chieh%20%60%60CT%40Chieh-CT%60%60CMCC%40Chieh-CMCC&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
+			url = `https://${subconverter}/sub?target=singbox&url=https%3A%2F%2F${sub}%2Fsub%3Fhost%3D${fakeHostName}%26uuid%3D${fakeUserID}%26edgetunnel%3Dcmliu%26proxyip%3D${RproxyIP}&insert=false&config=${encodeURIComponent(subconfig)}&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
 		} else {
-			url = `https://${subconverter}/sub?target=clash&url=https%3A%2F%2F${sub}%2Fsub%3Fhost%3D${fakeHostName}%26uuid%3D${fakeUserID}%26edgetunnel%3Dcmliu%26proxyip%3D${RproxyIP}&insert=false&config=${encodeURIComponent(subconfig)}&exclude=%E9%A2%91%E9%81%93%7C%E5%8F%8D%E4%BB%A3%7C%E4%BC%98%E9%80%89%7C%E5%9F%9F%E5%90%8D&rename=(%3F%3C%3D%5BA-Z%5D%7B2%7D)%20%40-Chieh%20%60%60CT%40Chieh-CT%60%60CMCC%40Chieh-CMCC&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&clash.doh=true&new_name=true`;
+			url = `https://${sub}/sub?host=${fakeHostName}&uuid=${fakeUserID}&edgetunnel=cmliu&proxyip=${RproxyIP}`;
+			isBase64 = true;
 		}
+
 		try {
 			const response = await fetch(url ,{
 			headers: {
 				'User-Agent': 'CF-Workers-edgetunnel/cmliu'
 			}});
-			content = await response.text();
+			const content = await response.text();
 			return revertFakeInfo(content, userID, hostName, isBase64);
 		} catch (error) {
 			console.error('Error fetching content:', error);
 			return `Error fetching content: ${error.message}`;
 		}
+
 	}
 }
