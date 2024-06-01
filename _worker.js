@@ -6,7 +6,7 @@ import { connect } from 'cloudflare:sockets';
 // [Windows] Press "Win + R", input cmd and run:  Powershell -NoExit -Command "[guid]::NewGuid()"
 let userID = '90cd4a77-141a-43c9-991b-08263cfe9c10';
 
-let proxyIP = '';// 小白勿动，该地址并不影响你的网速，这是给CF代理使用的。'cdn.xn--b6gac.eu.org', 'cdn-all.xn--b6gac.eu.org', 'edgetunnel.anycast.eu.org'
+let proxyIP = '';// 小白勿动，该地址并不影响你的网速，这是给CF代理使用的。'cdn.xn--b6gac.eu.org, cdn-all.xn--b6gac.eu.org, workers.cloudflare.cyou'
 
 //let sub = '';// 留空则显示原版内容
 let sub = 'vless-4ca.pages.dev';// 内置优选订阅生成器，可自行搭建 https://github.com/cmliu/WorkerVless2sub
@@ -40,6 +40,9 @@ export default {
 			const userAgent = request.headers.get('User-Agent').toLowerCase();
 			userID = (env.UUID || userID).toLowerCase();
 			proxyIP = env.PROXYIP || proxyIP;
+			const proxyIPs = await ADD(proxyIP);
+			proxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
+			//console.log(proxyIP);
 			socks5Address = env.SOCKS5 || socks5Address;
 			sub = env.SUB || sub;
 			subconverter = env.SUBAPI || subconverter;
@@ -840,6 +843,59 @@ function generateUUID() {
 	return uuid.replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5').toLowerCase();
 }
 
+async function ADD(envadd) {
+	var addtext = envadd.replace(/[	 "'\r\n]+/g, ',').replace(/,+/g, ',');  // 将空格、双引号、单引号和换行符替换为逗号
+	//console.log(addtext);
+	if (addtext.charAt(0) == ',') addtext = addtext.slice(1);
+	if (addtext.charAt(addtext.length -1) == ',') addtext = addtext.slice(0, addtext.length - 1);
+	const add = addtext.split(',');
+	//console.log(add);
+	return add ;
+}
+
+function 配置信息(UUID, 域名地址) {
+	const 啥啥啥_写的这是啥啊 = 'dmxlc3M=';
+	const 协议类型 = atob(啥啥啥_写的这是啥啊);
+	
+	const 别名 = 域名地址;
+	let 地址 = 域名地址;
+	let 端口 = 443;
+
+	const 用户ID = UUID;
+	const 加密方式 = 'none';
+	
+	const 传输层协议 = 'ws';
+	const 伪装域名 = 域名地址;
+	const 路径 = '/?ed=2560';
+	
+	let 传输层安全 = ['tls',true];
+	const SNI = 域名地址;
+	const 指纹 = 'randomized';
+
+	if (域名地址.includes('.workers.dev')){
+		地址 = 'www.wto.org';
+		端口 = 80 ;
+		传输层安全 = ['',false];
+	}
+
+	const v2ray = `${协议类型}://${用户ID}@${地址}:${端口}?encryption=${加密方式}&security=${传输层安全[0]}&sni=${SNI}&fp=${指纹}&type=${传输层协议}&host=${伪装域名}&path=${encodeURIComponent(路径)}#${encodeURIComponent(别名)}`;
+	const clash = `- type: ${协议类型}
+	name: ${别名}
+	server: ${地址}
+	port: ${端口}
+	uuid: ${用户ID}
+	network: ${传输层协议}
+	tls: ${传输层安全[1]}
+	udp: false
+	sni: ${SNI}
+	client-fingerprint: ${指纹}
+	ws-opts:
+	  path: "${路径}"
+	  headers:
+	  host: ${伪装域名}`;
+	return [v2ray,clash];
+}
+
 /**
  * @param {string} userID
  * @param {string | null} hostName
@@ -847,46 +903,43 @@ function generateUUID() {
  * @param {string} userAgent
  * @returns {Promise<string>}
  */
-let vv = 'v';
-let ll = 'l';
-let ee = 'e';
-let ss = 's';
 async function getVLESSConfig(userID, hostName, sub, userAgent, RproxyIP) {
+	const Config = 配置信息(userID , hostName);
+	const v2ray = Config[0];
+	const clash = Config[1];
 	// 如果sub为空，则显示原始内容
 	if (!sub || sub === '') {
-		const cmliuMain = `${vv}${ll}${ee}${ss}${ss}://${userID}@${hostName}:443?encryption=none&security=tls&sni=${hostName}&fp=randomized&type=ws&host=${hostName}&path=%2F%3Fed%3D2560#${hostName}`;
-  
+		
 		return `
 	################################################################
 	v2ray
 	---------------------------------------------------------------
-	${vlessMain}
+	${v2ray}
 	---------------------------------------------------------------
 	################################################################
 	clash-meta
 	---------------------------------------------------------------
-	- type: ${vv}${ll}${ee}${ss}${ss}
-	  name: ${hostName}
-	  server: ${hostName}
-	  port: 443
-	  uuid: ${userID}
-	  network: ws
-	  tls: true
-	  udp: false
-	  sni: ${hostName}
-	  client-fingerprint: chrome
-	  ws-opts:
-	    path: "/?ed=2560"
-	    headers:
-		  host: ${hostName}
+	${clash}
 	---------------------------------------------------------------
 	################################################################
 	`;
 	} else if (sub && userAgent.includes('mozilla') && !userAgent.includes('linux x86')) {
-		const cmliuMain = `${vv}${ll}${ee}${ss}${ss}://${userID}@${hostName}:443?encryption=none&security=tls&sni=${hostName}&fp=randomized&type=ws&host=${hostName}&path=%2F%3Fed%3D2560#${hostName}`;
-	
+		
 		return `
 	################################################################
+	${RproxyIP}.
+	---------------------------------------------------------------
+	https://${hostName}/${userID}
+	// ---------------------------------------------------------------
+	// ################################################################
+	// v2ray
+	// ---------------------------------------------------------------
+	// ${v2ray}
+	// ---------------------------------------------------------------
+	// ################################################################
+	// clash-meta
+	// ---------------------------------------------------------------
+	// ${clash}
 	---------------------------------------------------------------
 	################################################################
  	diediediediediediediediediediediediediediediediediediediediedie
